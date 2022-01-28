@@ -45,10 +45,8 @@ from tobrot.helper_funcs.split_large_files import split_large_files
 def getFolderSize(p):
     prepend = partial(os.path.join, p)
     return sum(
-        [
-            (os.path.getsize(f) if os.path.isfile(f) else getFolderSize(f))
-            for f in map(prepend, os.listdir(p))
-        ]
+        os.path.getsize(f) if os.path.isfile(f) else getFolderSize(f)
+        for f in map(prepend, os.listdir(p))
     )
 
 
@@ -62,8 +60,7 @@ async def upload_to_tg(
     yt_thumb=None,
 ):
     base_file_name = os.path.basename(local_file_name)
-    caption_str = ""
-    caption_str += "<code>"
+    caption_str = "" + "<code>"
     caption_str += base_file_name
     caption_str += "</code>"
     if os.path.isdir(local_file_name):
@@ -89,54 +86,53 @@ async def upload_to_tg(
                 edit_media,
                 yt_thumb,
             )
-    else:
-        if os.path.getsize(local_file_name) > TG_MAX_FILE_SIZE:
-            LOGGER.info("TODO")
-            d_f_s = humanbytes(os.path.getsize(local_file_name))
-            i_m_s_g = await message.reply_text(
-                "<b><i>📑Telegram doesn't Support Uploading this File.</i></b>\n"
-                f"<b><i>🎯Detected File Size: {d_f_s} </i></b>\n"
-                "\n<code>🗃 Trying to split the files . . .</code>"
-            )
-            splitted_dir = await split_large_files(local_file_name)
-            totlaa_sleif = os.listdir(splitted_dir)
-            totlaa_sleif.sort()
-            number_of_files = len(totlaa_sleif)
-            LOGGER.info(totlaa_sleif)
-            ba_se_file_name = os.path.basename(local_file_name)
-            await i_m_s_g.edit_text(
-                f"<b><i>📨 Detected File Size: {d_f_s}</i></b> \n"
-                f"📬<code>{ba_se_file_name}</code><i><b> splitted into {number_of_files} Files🗃.</b></i>\n"
-                "<i><b>📤Trying to upload to Telegram📤, Now...</b></i>"
-            )
-            for le_file in totlaa_sleif:
-                # recursion: will this FAIL somewhere?
-                await upload_to_tg(
-                    message,
-                    os.path.join(splitted_dir, le_file),
-                    from_user,
-                    dict_contatining_uploaded_files,
-                    client,
-                    edit_media,
-                    yt_thumb,
-                )
-        else:
-            sizze = os.path.getsize(local_file_name)
-            sent_message = await upload_single_file(
+    elif os.path.getsize(local_file_name) > TG_MAX_FILE_SIZE:
+        LOGGER.info("TODO")
+        d_f_s = humanbytes(os.path.getsize(local_file_name))
+        i_m_s_g = await message.reply_text(
+            "<b><i>📑Telegram doesn't Support Uploading this File.</i></b>\n"
+            f"<b><i>🎯Detected File Size: {d_f_s} </i></b>\n"
+            "\n<code>🗃 Trying to split the files . . .</code>"
+        )
+        splitted_dir = await split_large_files(local_file_name)
+        totlaa_sleif = os.listdir(splitted_dir)
+        totlaa_sleif.sort()
+        number_of_files = len(totlaa_sleif)
+        LOGGER.info(totlaa_sleif)
+        ba_se_file_name = os.path.basename(local_file_name)
+        await i_m_s_g.edit_text(
+            f"<b><i>📨 Detected File Size: {d_f_s}</i></b> \n"
+            f"📬<code>{ba_se_file_name}</code><i><b> splitted into {number_of_files} Files🗃.</b></i>\n"
+            "<i><b>📤Trying to upload to Telegram📤, Now...</b></i>"
+        )
+        for le_file in totlaa_sleif:
+            # recursion: will this FAIL somewhere?
+            await upload_to_tg(
                 message,
-                local_file_name,
-                caption_str,
+                os.path.join(splitted_dir, le_file),
                 from_user,
+                dict_contatining_uploaded_files,
                 client,
                 edit_media,
                 yt_thumb,
             )
-            if sent_message is not None:
-                dict_contatining_uploaded_files[
-                    os.path.basename(local_file_name)
-                ] = sent_message.message_id
-            else:
-                return
+    else:
+        sizze = os.path.getsize(local_file_name)
+        sent_message = await upload_single_file(
+            message,
+            local_file_name,
+            caption_str,
+            from_user,
+            client,
+            edit_media,
+            yt_thumb,
+        )
+        if sent_message is not None:
+            dict_contatining_uploaded_files[
+                os.path.basename(local_file_name)
+            ] = sent_message.message_id
+        else:
+            return
     # await message.delete()
     return dict_contatining_uploaded_files
 
@@ -202,10 +198,14 @@ async def upload_to_gdrive(file_upload, message, messa_ge, g_id):
         # os.remove("filter.txt")
         gauti = f"https://drive.google.com/file/d/{gautam}/view?usp=drivesdk"
         gjay = size(os.path.getsize(file_upload))
-        button = []
-        button.append(
-            [pyrogram.InlineKeyboardButton(text="☁️ CloudUrl ☁️", url=f"{gauti}")]
-        )
+        button = [
+            [
+                pyrogram.InlineKeyboardButton(
+                    text="☁️ CloudUrl ☁️", url=f"{gauti}"
+                )
+            ]
+        ]
+
         if INDEX_LINK:
             indexurl = f"{INDEX_LINK}/{os.path.basename(file_upload)}"
             tam_link = requests.utils.requote_uri(indexurl)
@@ -224,7 +224,6 @@ async def upload_to_gdrive(file_upload, message, messa_ge, g_id):
             reply_markup=button_markup,
         )
         os.remove(file_upload)
-        await del_it.delete()
     else:
         tt = os.path.join(destination, os.path.basename(file_upload))
         LOGGER.info(tt)
@@ -270,10 +269,14 @@ async def upload_to_gdrive(file_upload, message, messa_ge, g_id):
         gautii = f"https://drive.google.com/folderview?id={gautam}"
         gjay = size(getFolderSize(file_upload))
         LOGGER.info(gjay)
-        button = []
-        button.append(
-            [pyrogram.InlineKeyboardButton(text="☁️ CloudUrl ☁️", url=f"{gautii}")]
-        )
+        button = [
+            [
+                pyrogram.InlineKeyboardButton(
+                    text="☁️ CloudUrl ☁️", url=f"{gautii}"
+                )
+            ]
+        ]
+
         if INDEX_LINK:
             indexurl = f"{INDEX_LINK}/{os.path.basename(file_upload)}/"
             tam_link = requests.utils.requote_uri(indexurl)
@@ -292,7 +295,8 @@ async def upload_to_gdrive(file_upload, message, messa_ge, g_id):
             reply_markup=button_markup,
         )
         shutil.rmtree(file_upload)
-        await del_it.delete()
+
+    await del_it.delete()
 
 
 

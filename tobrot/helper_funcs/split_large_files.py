@@ -64,8 +64,8 @@ async def split_large_files(input_file):
 
             # adding offset of 3 seconds to ensure smooth playback
             start_time = end_time - 3
-            end_time = end_time + minimum_duration
-            i = i + 1
+            end_time += minimum_duration
+            i += 1
 
             if (end_time > total_duration) and not flag:
                 end_time = total_duration

@@ -37,7 +37,7 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 
 LOGGER = logging.getLogger(__name__)
 
-user_specific_config=dict()
+user_specific_config = {}
 
 dotenv.load_dotenv("config.env")
 

@@ -170,13 +170,10 @@ async def youtube_dl_call_back(bot, update):
                     os.rename(e, fi_le)
                     gaut_am = os.path.basename(fi_le)
 
-        is_cloud = False
         comd = update.message.reply_to_message.text
         LOGGER.info(comd)
         user_command = comd.split()[0]
-        if user_command == "/" + GYTDL_COMMAND:
-            is_cloud = True
-        if is_cloud:
+        if is_cloud := user_command == "/" + GYTDL_COMMAND:
             shutil.move(fi_le, "./")
             final_response = await upload_to_gdrive(
                 gaut_am, update.message, update.message.reply_to_message, user_id
