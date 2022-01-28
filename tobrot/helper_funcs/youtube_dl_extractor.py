@@ -77,10 +77,7 @@ async def extract_youtube_dl_formats(
         for current_r_json in response_json:
             #
             thumb_image = current_r_json.get("thumbnail", thumb_image)
-            #
-            duration = None
-            if "duration" in current_r_json:
-                duration = current_r_json["duration"]
+            duration = current_r_json["duration"] if "duration" in current_r_json else None
             if "formats" in current_r_json:
                 for formats in current_r_json["formats"]:
                     format_id = formats.get("format_id")
@@ -102,33 +99,27 @@ async def extract_youtube_dl_formats(
                     )
                     cb_string_video = "{}|{}|{}".format("video", format_id, format_ext)
                     ikeyboard = []
-                    if "drive.google.com" in url:
-                        if format_id == "source":
-                            ikeyboard = [
-                                pyrogram.InlineKeyboardButton(
-                                    dipslay_str_uon,
-                                    callback_data=(cb_string_video).encode("UTF-8"),
-                                )
-                            ]
-                    else:
-                        if (
-                            format_string is not None
-                            and not "audio only" in format_string
-                        ):
-                            ikeyboard = [
-                                pyrogram.InlineKeyboardButton(
-                                    dipslay_str_uon,
-                                    callback_data=(cb_string_video).encode("UTF-8"),
-                                )
-                            ]
-                        else:
-                            # special weird case :\
-                            ikeyboard = [
-                                pyrogram.InlineKeyboardButton(
-                                    "SVideo [" + "] ( " + approx_file_size + " )",
-                                    callback_data=(cb_string_video).encode("UTF-8"),
-                                )
-                            ]
+                    if (
+                        "drive.google.com" in url
+                        and format_id == "source"
+                        or "drive.google.com" not in url
+                        and format_string is not None
+                        and "audio only" not in format_string
+                    ):
+                        ikeyboard = [
+                            pyrogram.InlineKeyboardButton(
+                                dipslay_str_uon,
+                                callback_data=(cb_string_video).encode("UTF-8"),
+                            )
+                        ]
+                    elif "drive.google.com" not in url:
+                        # special weird case :\
+                        ikeyboard = [
+                            pyrogram.InlineKeyboardButton(
+                                "SVideo [" + "] ( " + approx_file_size + " )",
+                                callback_data=(cb_string_video).encode("UTF-8"),
+                            )
+                        ]
                     inline_keyboard.append(ikeyboard)
                 if duration is not None:
                     cb_string_64 = "{}|{}|{}".format("audio", "64k", "mp3")
@@ -171,6 +162,6 @@ async def extract_youtube_dl_formats(
         if cf_name:
             succss_mesg = f"""Select the desired format | {cf_name}"""
         else:
-            succss_mesg = f"""Select the desired format"""
+            succss_mesg = 'Select the desired format'
         LOGGER.info(succss_mesg)
         return thumb_image, succss_mesg, reply_markup
